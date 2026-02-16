@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   History, 
@@ -220,7 +219,7 @@ export const AuditTrail: React.FC = () => {
               <li>Logs are immutable (cannot be edited or deleted).</li>
               <li>Stored in a separate schema from operational data.</li>
               <li>Retention period: 7 years for financial compliance.</li>
-              <li>Auto-alerts triggered on high-risk transitions (Price reduction > 10%).</li>
+              <li>Auto-alerts triggered on high-risk transitions (Price reduction &gt; 10%).</li>
             </ul>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Database, 
@@ -141,7 +140,7 @@ USING (true); -- Global visibility for Finance`}
               <h4 className="font-bold text-indigo-800">Database Responsibility</h4>
               <ul className="list-disc list-inside space-y-2 text-indigo-700 text-xs">
                 <li><strong>Immutability:</strong> Tracking numbers and IDs cannot be updated after insert.</li>
-                <li><strong>State Safety:</strong> Rejects invalid status jumps (e.g. DRAFT -> RECEIVED).</li>
+                <li><strong>State Safety:</strong> Rejects invalid status jumps (e.g. DRAFT → RECEIVED).</li>
                 <li><strong>Financial Safety:</strong> Invoices cannot be deleted if payment is received.</li>
               </ul>
             </div>
