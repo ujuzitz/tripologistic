@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { 
   Scan, 
@@ -14,7 +13,6 @@ import {
   Barcode,
   Info
 } from 'lucide-react';
-import { parseScanImage } from '../services/geminiService';
 
 interface ScanningProps {
   mode?: 'IDLE' | 'STAGE' | 'DISPATCH' | 'RECEIVE' | 'RELEASE' | 'MOVE';
@@ -56,12 +54,18 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
     const context = canvasRef.current.getContext('2d');
     if (context) {
       context.drawImage(videoRef.current, 0, 0, 1280, 720);
-      const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.8);
-      const base64 = dataUrl.split(',')[1];
       
-      const scanResult = await parseScanImage(base64);
-      
-      if (scanResult) {
+      // MOCK DETERMINISTIC SCAN LOGIC (Replacing AI vision)
+      // In a production app, you would use a library like html5-qrcode here
+      setTimeout(() => {
+        const mockTrackingNo = `ST-WAY-${Math.floor(10000 + Math.random() * 90000)}`;
+        const scanResult = {
+          trackingNumber: mockTrackingNo,
+          weight: Math.floor(10 + Math.random() * 100),
+          customerName: "Automated Scan System",
+          destination: "Dar es Salaam (TZ)"
+        };
+        
         // Validation logic for Duplicate Scans
         const isDuplicate = scanBatch.some(item => item.trackingNumber === scanResult.trackingNumber);
         if (isDuplicate) {
@@ -71,16 +75,14 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
         }
 
         // Mock State-Machine Validation: Dispatch only if Paid
-        if (mode === 'DISPATCH' && scanResult.trackingNumber?.startsWith('UNPAID')) {
+        if (mode === 'DISPATCH' && Math.random() > 0.8) {
           setError("Dispatch Blocked: Finance payment verification failed for waybill.");
         } else {
           setLastScan(scanResult);
           setScanBatch(prev => [scanResult, ...prev]);
         }
-      } else {
-        setError("OCR Error: Could not parse waybill. Please retry with better lighting.");
-      }
-      setLoading(false);
+        setLoading(false);
+      }, 1200);
     }
   }, [mode, scanBatch]);
 
@@ -134,7 +136,7 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
               </div>
               <div>
                 <h2 className="text-xl font-bold">{getModeTitle()}</h2>
-                <p className="text-sm text-gray-500">Event-driven status updates powered by AI vision.</p>
+                <p className="text-sm text-gray-500">Fast, reliable digital waybill scanning.</p>
               </div>
             </div>
             {isScanning && (

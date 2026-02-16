@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  LineChart, Line, AreaChart, Area 
+  AreaChart, Area 
 } from 'recharts';
-import { Package, Truck, Receipt, AlertCircle, Sparkles } from 'lucide-react';
-import { getLogisticsInsights } from '../services/geminiService';
+import { Package, Truck, Receipt, AlertCircle, FileText, ClipboardList } from 'lucide-react';
 
 const data = [
   { name: 'Jan', shipments: 400, revenue: 2400 },
@@ -17,19 +15,6 @@ const data = [
 ];
 
 export const Dashboard: React.FC = () => {
-  const [insights, setInsights] = React.useState<string>('Analyzing trends...');
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const fetchInsights = async () => {
-      const res = await getLogisticsInsights(data);
-      // Ensure we set a string to the insights state
-      setInsights(res || "No insights available.");
-      setLoading(false);
-    };
-    fetchInsights();
-  }, []);
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -50,7 +35,6 @@ export const Dashboard: React.FC = () => {
         ].map((stat, idx) => (
           <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              {/* Fix: cast icon to ReactElement<any> to allow passing className via cloneElement */}
               <div className={`p-2 rounded-lg bg-${stat.color}-50 text-${stat.color}-600`}>
                 {React.cloneElement(stat.icon as React.ReactElement<any>, { className: 'w-6 h-6' })}
               </div>
@@ -83,24 +67,27 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-xl shadow-md text-white overflow-hidden relative">
-          <Sparkles className="absolute -right-4 -top-4 w-32 h-32 text-white/10 rotate-12" />
+        <div className="bg-slate-900 p-6 rounded-xl shadow-md text-white overflow-hidden relative border border-slate-800">
+          <div className="absolute -right-4 -top-4 w-32 h-32 text-white/5 rotate-12 bg-blue-500 rounded-full blur-3xl opacity-20" />
           <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <Sparkles className="w-5 h-5" /> Gemini AI Insights
+            <ClipboardList className="w-5 h-5 text-blue-400" /> Operational Summary
           </h3>
           <div className="space-y-4 text-sm leading-relaxed relative z-10">
-            {loading ? (
-              <div className="animate-pulse space-y-2">
-                <div className="h-4 bg-white/20 rounded w-3/4"></div>
-                <div className="h-4 bg-white/20 rounded w-full"></div>
-                <div className="h-4 bg-white/20 rounded w-5/6"></div>
-              </div>
-            ) : (
-              <p className="text-blue-50 font-medium whitespace-pre-wrap">{insights}</p>
-            )}
+            <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+              <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Efficiency</p>
+              <p className="text-slate-300">Transit times have improved by 12% following the new route optimizations in the Dar es Salaam corridor.</p>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+              <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Financials</p>
+              <p className="text-slate-300">Net margins stabilized at 32% MTD. Revenue is trending up for the Q2 forecast.</p>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+              <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Risk Alert</p>
+              <p className="text-slate-300">3 high-priority shipments are awaiting documentation approval at Guangzhou customs.</p>
+            </div>
           </div>
-          <button className="mt-6 w-full py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-xs font-bold transition-colors">
-            REFRESH ANALYSIS
+          <button className="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs font-bold transition-colors">
+            DOWNLOAD DETAILED REPORT
           </button>
         </div>
       </div>

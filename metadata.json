@@ -1,6 +1,6 @@
 {
   "name": "SinoTan Logistics Management System",
-  "description": "A secure, end-to-end logistics platform for China-Tanzania freight forwarding featuring automated scanning, financial tracking, and AI-driven logistics insights.",
+  "description": "A secure, end-to-end logistics platform for China-Tanzania freight forwarding featuring automated scanning, financial tracking, and operational logistics insights.",
   "requestFramePermissions": [
     "camera"
   ]

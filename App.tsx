@@ -14,6 +14,7 @@ import { FinanceHub } from './components/FinanceHub';
 import { ExpenseManagement } from './components/ExpenseManagement';
 import { ShipmentConsole } from './components/ShipmentConsole';
 import { Customers } from './components/Customers';
+import { Inventory } from './components/Inventory';
 import { UserRole } from './types';
 import { Search, Bell, HelpCircle } from 'lucide-react';
 
@@ -50,6 +51,8 @@ const App: React.FC = () => {
         return <ExpenseManagement role={userRole} />;
       case 'customers':
         return <Customers role={userRole} />;
+      case 'packages':
+        return <Inventory role={userRole} />;
       case 'shipments':
         return (
           <ShipmentConsole 
@@ -61,8 +64,6 @@ const App: React.FC = () => {
             onExpensesShipment={() => setActiveTab('expenses')}
           />
         );
-      case 'packages':
-        return <div className="p-12 text-center text-gray-400">Package Inventory Module</div>;
       case 'invoices':
         return <div className="p-12 text-center text-gray-400">Global Financial Billing</div>;
       case 'reports':

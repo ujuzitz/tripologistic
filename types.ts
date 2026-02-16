@@ -22,6 +22,7 @@ export enum PackageStatus {
   DISPATCHED = 'DISPATCHED',
   ARRIVED = 'ARRIVED',
   LOCATED = 'LOCATED',
+  READY_FOR_RELEASE = 'READY_FOR_RELEASE',
   RELEASED = 'RELEASED'
 }
 
@@ -36,7 +37,11 @@ export enum AuditEventType {
   EXPENSE_APPROVED = 'EXPENSE_APPROVED',
   FUNDING_RELEASED = 'FUNDING_RELEASED',
   CUSTOMER_CREATED = 'CUSTOMER_CREATED',
-  CUSTOMER_UPDATED = 'CUSTOMER_UPDATED'
+  CUSTOMER_UPDATED = 'CUSTOMER_UPDATED',
+  PKG_LOCATION_ASSIGNED = 'PKG_LOCATION_ASSIGNED',
+  PKG_RELEASED = 'PKG_RELEASED',
+  SHIPMENT_LABEL_PRINTED = 'SHIPMENT_LABEL_PRINTED',
+  SHIPMENT_PRICE_LOCKED = 'SHIPMENT_PRICE_LOCKED'
 }
 
 export interface AuditLogEntry {
@@ -69,6 +74,13 @@ export enum ExpenseStatus {
   FUNDED = 'FUNDED'
 }
 
+export interface Warehouse {
+  id: string;
+  name: string;
+  region: 'CN' | 'TZ';
+  code: string;
+}
+
 export interface Customer {
   id: string;
   accountNumber: string;
@@ -84,14 +96,27 @@ export interface Customer {
 
 export interface Package {
   id: string;
-  pkgCode: string; 
+  pkgCode?: string; 
+  name: string;
   description: string;
   weight: number;
   volume: number;
+  qty: number;
+  dimensions?: string;
+  notes?: string;
   customerId: string;
+  customerName?: string;
   shipmentId?: string;
-  locationCode: string;
+  shipmentTrackingNo?: string;
+  warehouseId: string;
+  locationCode?: string;
   status: PackageStatus;
+  receivedAt?: string;
+}
+
+export interface AdditionalCharge {
+  name: string;
+  amount: number;
 }
 
 export interface Shipment {
@@ -99,9 +124,26 @@ export interface Shipment {
   trackingNo: string;
   status: ShipmentStatus;
   approvalStatus: 'draft' | 'approved' | 'rejected';
-  quotedPrice: number;
+  
+  // Pricing Fields
+  pricingType: 'flat' | 'package' | 'weight' | 'custom';
+  basePrice: number;
   currency: 'USD' | 'TZS' | 'CNY';
+  additionalCharges: AdditionalCharge[];
+  discountValue: number;
+  discountType: 'amount' | 'percent';
+  finalTotal: number;
+  pricingNotes?: string;
+  priceLocked: boolean;
+  priceLockedAt?: string;
+  priceLockedBy?: string;
+
+  quotedPrice: number; // Legacy, kept for compatibility
   originRegion: 'CN' | 'TZ';
   destinationRegion: 'CN' | 'TZ';
   createdAt: string;
+  paymentStatus: 'Unpaid' | 'Paid';
+  customerName?: string;
+  customerPhone?: string;
+  packageCount?: number;
 }
