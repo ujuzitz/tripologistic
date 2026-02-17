@@ -1,18 +1,19 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+
+// Added React import to resolve namespace error
+import React, { useRef, useState, useCallback } from 'react';
 import { 
   Scan, 
   Camera, 
   X, 
   CheckCircle2, 
   Loader2, 
-  Package, 
   AlertCircle, 
   List, 
-  ChevronDown, 
-  MapPin,
   Barcode,
-  Info
+  Info,
+  Sparkles
 } from 'lucide-react';
+import { parseScanImage } from '../services/geminiService';
 
 interface ScanningProps {
   mode?: 'IDLE' | 'STAGE' | 'DISPATCH' | 'RECEIVE' | 'RELEASE' | 'MOVE';
@@ -54,35 +55,34 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
     const context = canvasRef.current.getContext('2d');
     if (context) {
       context.drawImage(videoRef.current, 0, 0, 1280, 720);
+      const base64Image = canvasRef.current.toDataURL('image/jpeg', 0.8);
       
-      // MOCK DETERMINISTIC SCAN LOGIC (Replacing AI vision)
-      // In a production app, you would use a library like html5-qrcode here
-      setTimeout(() => {
-        const mockTrackingNo = `ST-WAY-${Math.floor(10000 + Math.random() * 90000)}`;
-        const scanResult = {
-          trackingNumber: mockTrackingNo,
-          weight: Math.floor(10 + Math.random() * 100),
-          customerName: "Automated Scan System",
-          destination: "Dar es Salaam (TZ)"
-        };
+      try {
+        const scanResult = await parseScanImage(base64Image);
         
-        // Validation logic for Duplicate Scans
+        if (!scanResult?.trackingNumber) {
+          throw new Error("Could not detect tracking number. Please try again with better lighting.");
+        }
+
         const isDuplicate = scanBatch.some(item => item.trackingNumber === scanResult.trackingNumber);
         if (isDuplicate) {
-          setError(`Duplicate Scan: Package ${scanResult.trackingNumber} already in current batch.`);
+          setError(`Duplicate Scan: ${scanResult.trackingNumber} is already in the batch.`);
           setLoading(false);
           return;
         }
 
-        // Mock State-Machine Validation: Dispatch only if Paid
-        if (mode === 'DISPATCH' && Math.random() > 0.8) {
-          setError("Dispatch Blocked: Finance payment verification failed for waybill.");
+        // Mock State-Machine Logic for Demo
+        if (mode === 'DISPATCH' && Math.random() > 0.9) {
+          setError("Dispatch Blocked: Finance payment verification failed for this waybill.");
         } else {
           setLastScan(scanResult);
           setScanBatch(prev => [scanResult, ...prev]);
         }
+      } catch (err: any) {
+        setError(err.message || "AI vision failed. Ensure the waybill is clear.");
+      } finally {
         setLoading(false);
-      }, 1200);
+      }
     }
   }, [mode, scanBatch]);
 
@@ -93,7 +93,6 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
   };
 
   const handleBatchSubmit = () => {
-    // Simulate auto-status update logic
     setShowStatusAlert(true);
     setTimeout(() => {
       setShowStatusAlert(false);
@@ -104,7 +103,7 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
   const getModeTitle = () => {
     switch(mode) {
       case 'STAGE': return "Package Staging";
-      case 'DISPATCH': return "Waybill Dispatch Confirmation";
+      case 'DISPATCH': return "Dispatch Confirmation";
       case 'RECEIVE': return "Warehouse Receiving";
       case 'RELEASE': return "Customer Handover";
       case 'MOVE': return "Location Assignment";
@@ -116,13 +115,12 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
     <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
         
-        {/* State Machine Transition Feedback */}
         {showStatusAlert && (
           <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-start gap-4 animate-in slide-in-from-top-4 duration-500 shadow-sm">
             <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
             <div className="text-xs text-emerald-800">
                <p className="font-bold uppercase tracking-widest mb-1">Batch Processed Successfully</p>
-               <p>The shipment status has been automatically updated based on package scan completion.</p>
+               <p>The shipment status has been updated based on AI verification.</p>
                <p className="font-mono mt-1 text-[10px] opacity-75">Audit ID: {Math.random().toString(36).substr(2, 9)}</p>
             </div>
           </div>
@@ -136,7 +134,10 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
               </div>
               <div>
                 <h2 className="text-xl font-bold">{getModeTitle()}</h2>
-                <p className="text-sm text-gray-500">Fast, reliable digital waybill scanning.</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-500">AI-powered waybill extraction</p>
+                  <Sparkles className="w-3 h-3 text-blue-400" />
+                </div>
               </div>
             </div>
             {isScanning && (
@@ -181,8 +182,8 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
                   disabled={loading}
                   className="bg-white text-slate-900 px-8 py-3 rounded-full font-bold shadow-xl disabled:opacity-50 flex items-center gap-2 hover:scale-105 transition-all"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
-                  {loading ? 'ANALYZING...' : 'CAPTURE WAYBILL'}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                  {loading ? 'AI ANALYZING...' : 'CAPTURE & EXTRACT'}
                 </button>
                 <button 
                   onClick={closeCamera}
@@ -205,13 +206,12 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
           <canvas ref={canvasRef} width="1280" height="720" className="hidden" />
         </div>
 
-        {/* RECEIVE Step: Location Assignment required for Received status */}
         {mode === 'RECEIVE' && lastScan && (
           <div className="bg-amber-50 border border-amber-100 p-6 rounded-xl animate-in fade-in duration-300">
              <div className="flex gap-4">
               <input 
                 type="text" 
-                placeholder="Scan Rack/Bin QR code (Mandatory for Received status)" 
+                placeholder="Scan Rack/Bin QR code (Mandatory)" 
                 className="flex-1 px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs"
               />
               <button className="bg-amber-600 text-white px-6 py-2 rounded-lg font-bold text-xs shadow-sm hover:bg-amber-700 transition-colors">
@@ -222,7 +222,6 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
         )}
       </div>
 
-      {/* Batch Side Panel */}
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
           <div className="flex items-center justify-between mb-6">
@@ -245,6 +244,7 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
                   <div className="truncate pr-4">
                     <p className="text-[10px] font-bold text-gray-400 font-mono leading-none mb-1">{item.trackingNumber || 'UKNOWN'}</p>
                     <p className="text-xs font-bold text-gray-900 truncate">{item.customerName || 'Standard Client'}</p>
+                    {item.weight && <p className="text-[9px] text-blue-500 mt-1">Extracted: {item.weight}kg</p>}
                   </div>
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                 </div>
@@ -263,7 +263,7 @@ export const Scanning: React.FC<ScanningProps> = ({ mode = 'STAGE' }) => {
               <div className="p-3 bg-gray-50 rounded-lg flex gap-2">
                  <Info className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
                  <p className="text-[9px] text-gray-500 leading-tight">
-                   Submitting will trigger a status evaluation. If all packages are processed, the waybill will auto-advance to the next phase.
+                   Submitting triggers AI status evaluation. If all packages are processed, the waybill will auto-advance.
                  </p>
               </div>
             </div>

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  AreaChart, Area 
+  CartesianGrid, Tooltip, ResponsiveContainer, 
+  AreaChart, Area, XAxis, YAxis 
 } from 'recharts';
-import { Package, Truck, Receipt, AlertCircle, FileText, ClipboardList } from 'lucide-react';
+import { Package, Truck, Receipt, AlertCircle, Sparkles, ClipboardList, RefreshCw } from 'lucide-react';
+import { getLogisticsInsights } from '../services/geminiService';
 
 const data = [
   { name: 'Jan', shipments: 400, revenue: 2400 },
@@ -15,13 +16,37 @@ const data = [
 ];
 
 export const Dashboard: React.FC = () => {
+  const [insights, setInsights] = useState<string>("");
+  const [loadingInsights, setLoadingInsights] = useState(false);
+
+  const fetchInsights = async () => {
+    setLoadingInsights(true);
+    const dashboardStats = {
+      activeShipments: 124,
+      pendingDelivery: 45,
+      unpaidInvoices: 12400,
+      opsAlerts: 3,
+      revenueTrend: data
+    };
+    const result = await getLogisticsInsights(dashboardStats);
+    setInsights(result || "Unable to generate insights at this time.");
+    setLoadingInsights(false);
+  };
+
+  useEffect(() => {
+    fetchInsights();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Logistics Command Center</h2>
+        <div>
+          <h2 className="text-2xl font-bold">Logistics Command Center</h2>
+          <p className="text-gray-500 text-sm">Real-time China-Tanzania Operational Feed</p>
+        </div>
         <div className="flex gap-2">
            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-             System Online
+             Live Sync
            </span>
         </div>
       </div>
@@ -67,27 +92,38 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-slate-900 p-6 rounded-xl shadow-md text-white overflow-hidden relative border border-slate-800">
+        <div className="bg-slate-900 p-6 rounded-xl shadow-md text-white overflow-hidden relative border border-slate-800 flex flex-col">
           <div className="absolute -right-4 -top-4 w-32 h-32 text-white/5 rotate-12 bg-blue-500 rounded-full blur-3xl opacity-20" />
-          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-blue-400" /> Operational Summary
-          </h3>
-          <div className="space-y-4 text-sm leading-relaxed relative z-10">
-            <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-              <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Efficiency</p>
-              <p className="text-slate-300">Transit times have improved by 12% following the new route optimizations in the Dar es Salaam corridor.</p>
-            </div>
-            <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-              <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Financials</p>
-              <p className="text-slate-300">Net margins stabilized at 32% MTD. Revenue is trending up for the Q2 forecast.</p>
-            </div>
-            <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-              <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Risk Alert</p>
-              <p className="text-slate-300">3 high-priority shipments are awaiting documentation approval at Guangzhou customs.</p>
-            </div>
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-400" /> AI Insights
+            </h3>
+            <button 
+              onClick={fetchInsights} 
+              disabled={loadingInsights}
+              className="p-1 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 text-slate-400 ${loadingInsights ? 'animate-spin' : ''}`} />
+            </button>
           </div>
+
+          <div className="flex-1 space-y-4 text-sm leading-relaxed relative z-10">
+            {loadingInsights ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 opacity-50">
+                <RefreshCw className="w-8 h-8 animate-spin text-blue-400" />
+                <p className="text-xs font-mono">Analyzing logistics data...</p>
+              </div>
+            ) : (
+              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700 h-full overflow-y-auto">
+                <p className="text-slate-300 whitespace-pre-line text-xs italic">
+                  {insights || "Click refresh to generate AI operational analysis."}
+                </p>
+              </div>
+            )}
+          </div>
+          
           <button className="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs font-bold transition-colors">
-            DOWNLOAD DETAILED REPORT
+            DOWNLOAD FULL REPORT
           </button>
         </div>
       </div>
